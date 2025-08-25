@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 class LoginController extends Controller
 {
@@ -41,6 +41,7 @@ class LoginController extends Controller
             );
             Auth::login($user);
             $success = $user->createToken($user->id);
+            $success->user_infor = $user;
             return $this->responseApi->success($success);
         } catch (\Exception $e) {
             Log::error($e);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DemoController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\notificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,4 +25,5 @@ Route::post('/login', [LoginController::class, 'login']);
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/list-data', [DemoController::class, 'list']);
+    Route::get('/list-notification', [notificationController::class, 'listNotification']);
 });
