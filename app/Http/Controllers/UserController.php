@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Common;
 use App\Models\Live;
+use App\Models\User;
+use App\Services\YoutubeLiveService;
 use Illuminate\Http\Request;
 use App\Helpers\ResponseAPI;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -51,5 +56,73 @@ class UserController extends Controller
         }
 
         return $this->responseApi->success($responseData);
+    }
+
+    public function getGoogleLiveAuthURL(Request $request)
+    {
+        $youtubeLiveService = new YoutubeLiveService();
+
+        // Response redirect url to client
+        return $this->responseApi->success(
+            $youtubeLiveService->redirectAuthGoogle() // Client will use this url to access and get code
+        );
+    }
+
+    public function saveToken(Request $request)
+    {
+        $param = $request->all();
+        $streamerId = Auth::id();
+        $youtubeLiveService = new YoutubeLiveService();
+        $liveTokenData = $youtubeLiveService->renderToken($param['code'], $streamerId);
+
+        // Save token to DB
+        try {
+            DB::table('users')->where('id', $streamerId)
+                ->update(['google_token' => $liveTokenData['google_live_token']]);
+            return $this->responseApi->success($streamerId);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->responseApi->InternalServerError();
+        }
+    }
+
+    public function youtubeRegisterLive(Request $request)
+    {
+        $param = $request->all();
+        $fileName = '';
+
+        // Check thumbnail's type to upload
+        if ($request->hasFile('thumbnail')) {
+            $file = $request->file('thumbnail');
+            $fileName = md5(date('Y-m-d H:i:s')) . '.' . $file->getClientOriginalExtension();
+            // Save to public
+            $file->move(public_path('/uploads/thumbnails'), $fileName);
+        }
+
+        $googleLiveToken = User::select('google_token')->where('id', Auth::id())
+            ->first();
+        if (is_null($googleLiveToken->google_token)) {
+            return $this->responseApi->UnAuthorization();
+        }
+
+        // Create new live session
+        $youtubeLiveService = new YoutubeLiveService();
+        $liveSession = $youtubeLiveService->createLiveStream(
+            $param['title'],
+            $googleLiveToken->google_token
+        );
+        $live = new Live();
+        $live->streamer_id = Auth::id();
+        $live->title = $param['title'];
+        $live->thumbnail = $fileName;
+        $live->time_start = $param['start_time'];
+        $live->time_end = Carbon::create($param['start_time'])->addHours(2);
+        $live->stream_url = $liveSession['stream_url'];
+        $live->stream_key = $liveSession['stream_key'];
+        $live->watch_url = $liveSession['watch_url'];
+        $live->embed_url = $liveSession['embed_url'];
+        $live->save();
+
+        return $this->responseApi->success($live);
     }
 }
