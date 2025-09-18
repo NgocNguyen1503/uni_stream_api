@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -30,6 +29,7 @@ return new class extends Migration
             $table->string('stream_url', 255)->nullable();
             $table->string('stream_key', 255)->nullable();
             $table->string('watch_url', 255)->nullable();
+            $table->string('embed_url', 255)->nullable();
             $table->timestamps();
         });
 
