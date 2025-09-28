@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Live extends Model
 {
@@ -21,4 +22,9 @@ class Live extends Model
         'stream_key',
         'watch_url'
     ];
+
+    public function streamer()
+    {
+        return $this->hasOne(User::class, 'id', 'streamer_id');
+    }
 }

@@ -31,4 +31,5 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/google-live-auth-url', [UserController::class, 'getGoogleLiveAuthURL']);
     Route::get('/save-token', [UserController::class, 'saveToken']);
     Route::post('/youtube-register-live', [UserController::class, 'youtubeRegisterLive']);
+    Route::get('/live-detail', [UserController::class, 'liveDetail']);
 });

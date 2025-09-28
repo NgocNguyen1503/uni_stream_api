@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Common;
+use App\Models\Follow;
 use App\Models\Live;
 use App\Models\User;
 use App\Services\YoutubeLiveService;
@@ -124,5 +125,62 @@ class UserController extends Controller
         $live->save();
 
         return $this->responseApi->success($live);
+    }
+
+    public function liveDetail(Request $request)
+    {
+        $param = $request->all();
+        $currentLive = Live::join('users', 'lives.streamer_id', 'users.id')
+            ->with('streamer', 'streamer.follows')
+            ->select(
+                'lives.id',
+                'users.name as streamer_name',
+                'users.avatar',
+                'lives.thumbnail',
+                'lives.title',
+                'lives.time_start',
+                'lives.watch_url',
+                'lives.embed_url',
+                'lives.stream_url',
+                'lives.stream_key',
+                'lives.streamer_id'
+            )->where('lives.id', $param['live_id'])
+            ->first();
+
+        $isFollowed = Follow::NOT_FOLLOWED;
+        if (!is_null($currentLive->streamer->follows)) {
+            foreach ($currentLive->streamer->follows as $follow) {
+                if ($follow->user_id == Auth::id()) {
+                    $isFollowed == Follow::FOLLOWED;
+                }
+            }
+        }
+
+        // Check if user is watching his own streaming
+        if ($currentLive->streamer_id == Auth::id()) {
+            $isFollowed = Follow::OWNER;
+        }
+
+        $currentLive->follows = $isFollowed;
+        unset($currentLive->streamer);
+
+        $listLive = Live::join('users', 'lives.streamer_id', 'users.id')
+            ->select(
+                'lives.id',
+                'users.name as streamer_name',
+                'users.avatar',
+                'lives.thumbnail',
+                'lives.title',
+                'lives.time_start',
+            )->where('lives.id', '<>', $param['live_id'])
+            ->limit(config('const.recommendation_live_limit'))->get()
+            ->map(function ($item) {
+                return Common::updateLiveInfor($item);
+            });
+
+        return $this->responseApi->success([
+            'live' => $currentLive,
+            'list_live' => $listLive
+        ]);
     }
 }
