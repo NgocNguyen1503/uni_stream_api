@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Common;
+use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Live;
 use App\Models\User;
@@ -182,5 +183,64 @@ class UserController extends Controller
             'live' => $currentLive,
             'list_live' => $listLive
         ]);
+    }
+
+    public function follow(Request $request)
+    {
+        $params = $request->all();
+        if ($params['type'] == 'follow') {
+            // Follow and insert to database
+            DB::table('follows')->insert([
+                'user_id' => Auth::id(),
+                'follow_id' => $params['follow_id']
+            ]);
+        } else {
+            // Unfollow and remove record in database
+            DB::table('follows')->where('user_id', Auth::id())
+                ->where('follow_id', $params['follow_id'])
+                ->delete();
+        }
+        return $this->responseApi->success();
+    }
+
+    public function sendComment(Request $request)
+    {
+        $params = $request->all();
+        // Insert to database
+        $store = Comment::create([
+            'user_id' => Auth::id(),
+            'comment' => $params['comment'],
+            'live_id' => $params['live_id'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $store->avatar = Auth::user()->avatar;
+        $store->name = Auth::user()->name;
+        $store->type = "comment";
+        $store->action = "comment";
+        return $this->responseApi->success($store);
+    }
+
+    public function getComments(Request $request)
+    {
+        $params = $request->all();
+        $comments = Comment::join('users', 'comments.user_id', 'users.id')
+            ->select(
+                'comments.id',
+                'comments.comment',
+                'users.avatar',
+                'users.name',
+                'comments.created_at',
+                'comments.updated_at',
+                'comments.live_id'
+            )
+            ->where('live_id', $params['live_id'])
+            ->orderBy('created_at', 'ASC')
+            ->get()->map(function ($item) {
+                $item->type = 'comment';
+                $item->action = 'comment';
+                return $item;
+            });
+        return $this->responseApi->success($comments);
     }
 }

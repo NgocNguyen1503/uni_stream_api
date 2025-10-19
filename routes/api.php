@@ -32,4 +32,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/save-token', [UserController::class, 'saveToken']);
     Route::post('/youtube-register-live', [UserController::class, 'youtubeRegisterLive']);
     Route::get('/live-detail', [UserController::class, 'liveDetail']);
+    Route::get('/follow', [UserController::class, 'follow']);
+    Route::post('/send-comment', [UserController::class, 'sendComment']);
+    Route::get('/get-comments', [UserController::class, 'getComments']);
 });
