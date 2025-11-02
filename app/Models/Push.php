@@ -9,6 +9,10 @@ class Push extends Model
 {
     use HasFactory;
 
+    const STATUS_WAIT = 'wait';
+    const STATUS_DONE = 'done';
+    const STATUS_FAIL = 'fail';
+
     protected $table = 'pushes';
 
     protected $fillable = [

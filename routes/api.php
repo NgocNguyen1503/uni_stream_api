@@ -27,6 +27,8 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/list-data', [DemoController::class, 'list']);
     Route::get('/list-notification', [NotificationController::class, 'listNotification']);
+    Route::get('/set-device-token', [NotificationController::class, 'setDeviceToken']);
+
     Route::get('/index', [UserController::class, 'index']);
     Route::get('/google-live-auth-url', [UserController::class, 'getGoogleLiveAuthURL']);
     Route::get('/save-token', [UserController::class, 'saveToken']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Common;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Helpers\ResponseAPI;
 use App\Models\Push;
@@ -37,5 +38,15 @@ class NotificationController extends Controller
                 return $noti;
             });
         return $this->responseApi->success($pushes);
+    }
+
+    public function setDeviceToken(Request $request)
+    {
+        $params = $request->all();
+        $user = Auth::user();
+        $user->update([
+            'device_token' => $params['fcmToken']
+        ]);
+        return $this->responseApi->success($user);
     }
 }

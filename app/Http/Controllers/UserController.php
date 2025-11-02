@@ -6,6 +6,7 @@ use App\Helpers\Common;
 use App\Models\Comment;
 use App\Models\Follow;
 use App\Models\Live;
+use App\Models\Push;
 use App\Models\User;
 use App\Services\YoutubeLiveService;
 use Illuminate\Http\Request;
@@ -124,6 +125,22 @@ class UserController extends Controller
         $live->watch_url = $liveSession['watch_url'];
         $live->embed_url = $liveSession['embed_url'];
         $live->save();
+
+        // Get all user follow
+        $followMe = Follow::where('follow_id', Auth::id())
+            ->select('user_id')->get();
+        foreach ($followMe as $follower) {
+            DB::table('pushes')->insert([
+                'title' => $param['title'],
+                'content' => Auth::user()->name . ' vừa tạo phiên live',
+                'status' => Push::STATUS_WAIT,
+                'user_id' => $follower->user_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Create notification to all user follow
 
         return $this->responseApi->success($live);
     }
