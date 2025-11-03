@@ -37,4 +37,5 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/follow', [UserController::class, 'follow']);
     Route::post('/send-comment', [UserController::class, 'sendComment']);
     Route::get('/get-comments', [UserController::class, 'getComments']);
+    Route::post('/report', [UserController::class, 'report']);
 });

@@ -8,6 +8,7 @@ use App\Models\Follow;
 use App\Models\Live;
 use App\Models\Push;
 use App\Models\User;
+use App\Services\GoogleSpreadsheetService;
 use App\Services\YoutubeLiveService;
 use Illuminate\Http\Request;
 use App\Helpers\ResponseAPI;
@@ -259,5 +260,18 @@ class UserController extends Controller
                 return $item;
             });
         return $this->responseApi->success($comments);
+    }
+
+    public function report(Request $request)
+    {
+        $params = $request->all();
+        $googleSpreadSheetService = new GoogleSpreadsheetService();
+        $report = $googleSpreadSheetService->writeSheet('reports', [
+            "values" => [
+                $params['live_id'],
+                $params['report_content']
+            ]
+        ]);
+        return $this->responseApi->success($report);
     }
 }
